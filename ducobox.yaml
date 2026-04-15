@@ -1,0 +1,442 @@
+# Include components
+external_components:
+  - source: github://Henkeh/DucoBox-ESPHome
+    components: [duco_gateway, duco_rf]
+
+# Enable Home Assistant API
+api:
+
+# Configure OTA
+ota:
+  - platform: esphome
+    password: ""              # Change to a secure password if used in a non-secure environment
+
+# Configure WiFi
+wifi:
+  ssid: "DummySSID"           # Change to your WiFi SSID
+  password: "DummyPassword"   # Change to your WiFi password
+  use_address: 1.2.3.4        # Change to the desired static IP address for this device (if not using DHCP)
+  min_auth_mode: WPA2
+
+# Enable web server
+web_server:
+  port: 80
+  version: '3'
+
+# Configure ESP32 specific settings
+esp32:
+  board: esp32-s3-devkitc-1   # Change to your board if different and update pin numbers accordingly
+  cpu_frequency: 240MHz
+  variant: esp32s3
+  framework:
+    type: esp-idf
+    advanced:
+      assertion_level: DISABLE
+      compiler_optimization: PERF
+
+esphome:
+  name: ducobox
+  friendly_name: DucoBox
+  on_boot:
+    - priority: -10
+      then:
+        # Get the ventilation box and this controller into sync by forcing "auto" mode right after startup, which should be a safe default that is accepted by the ventilation box regardless of its current state
+        - delay: 2s
+        - lambda: |-
+            id(duco_rf_gw).request_ventilation_mode(0, false, 0, 1);
+
+# ── Serial gateway (read) ───────────────────────────────────────────────────
+logger:
+  baud_rate: 0
+  level: INFO
+
+# Uncomment sensor definitions below as needed; these are used by the duco_gateway component to populate the data read from the ventilation box, and can also be used for debugging or other purposes as desired
+duco_gateway:
+  id: duco_gateway_gw
+  uart_id: ducobox_uart
+  poll_interval: 5s
+  ext_sensor_node: 2    # UCCO2 node (CO2 + temp), node ID can be found by pressing the "Log All Duco Nodes" button in the UI and looking for the node marked as "UCCO2"
+  rh_sensor_node: 4     # UCRH node (humidity)
+  ##vent_mode_sensor:       sensor_vent_mode
+  vent_percentage_sensor: fan_speed_pct
+  fan_speed_sensor:       fan_speed
+  countdown_sensor:       countdown_sensor
+  box_temperature_sensor: box_temperature
+  box_humidity_sensor:    box_humidity
+  ext_co2_sensor:         livingroom_co2
+  ext_temperature_sensor: livingroom_temperature
+  ext_humidity_sensor:    bathroom_humidity
+  vent_mode_text_sensor:  ventilation_mode_text
+
+uart:
+  id: ducobox_uart
+  tx_pin: GPIO43          # Change to the correct TX pin for your board
+  rx_pin: GPIO44          # Change to the correct RX pin for your board
+  baud_rate: 115200
+
+# ── RF gateway (write) ────────────────────────────────────────────────────
+duco_rf:
+  id: duco_rf_gw
+  cc1101_id: duco_cc1101
+  radio_power: 0x8D
+  temperature: 210        # 21.0 °C dummy value
+  vent_mode_text_sensor: ventilation_mode_rf_text
+  network_id_text_sensor: duco_network_id_text
+  device_address_text_sensor: duco_device_address_text
+
+cc1101:
+  id: duco_cc1101
+  spi_id: duco_spi
+  cs_pin: GPIO07          # Change to the correct CS pin for your board
+  gdo0_pin: GPIO06        # Change to the correct GDO0 pin for your board (used for packet reception indication)
+  packet_mode: true
+  packet_length: 0
+  crc_enable: true
+  whitening: false
+  modulation_type: GFSK
+  frequency: 868.326447MHz
+  sync_mode: 30/32
+  if_frequency: 152344Hz
+  channel: 0
+  symbol_rate: 38383
+  filter_bandwidth: 101562Hz
+  channel_spacing: 199951Hz
+  fsk_deviation: 20630Hz
+  sync1: 0xD3
+  sync0: 0x91
+  num_preamble: 4
+  # output_power: 1
+
+spi:
+  id: duco_spi
+  clk_pin: GPIO02       # Change to the correct CLK pin for your board
+  miso_pin: GPIO04      # Change to the correct MISO pin for your board
+  mosi_pin: GPIO01      # Change to the correct MOSI pin for your board
+
+# All outputs
+sensor:
+  - platform: template
+    id: fan_speed_pct
+    name: "Fan Speed (%)"
+    unit_of_measurement: "%"
+    icon: "mdi:fan"
+    accuracy_decimals: 0
+    state_class: measurement
+
+  - platform: template
+    id: fan_speed
+    name: "Fan Speed"
+    unit_of_measurement: "rpm"
+    icon: "mdi:fan"
+    accuracy_decimals: 0
+    state_class: measurement
+
+  - platform: template
+    id: countdown_sensor
+    name: "Countdown"
+    icon: "mdi:fan-clock"
+    unit_of_measurement: "s"
+    accuracy_decimals: 0
+    state_class: measurement
+
+  - platform: template
+    id: box_temperature
+    name: "Box Temperature"
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    device_class: temperature
+    state_class: measurement
+
+  - platform: template
+    id: box_humidity
+    name: "Box Humidity"
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    device_class: humidity
+    state_class: measurement
+
+  - platform: template
+    id: livingroom_co2
+    name: "Livingroom CO2"
+    unit_of_measurement: "ppm"
+    accuracy_decimals: 0
+    icon: "mdi:molecule-co2"
+    device_class: carbon_dioxide
+    state_class: measurement
+
+  - platform: template
+    id: livingroom_temperature
+    name: "Livingroom Temperature"
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    icon: "mdi:thermometer"
+    device_class: temperature
+    state_class: measurement
+
+  - platform: template
+    id: bathroom_humidity
+    name: "Bathroom Humidity"
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    device_class: humidity
+    state_class: measurement
+
+text_sensor:
+  - platform: template
+    id: ventilation_mode_text
+    name: "Ventilation mode text"
+    icon: "mdi:fan"
+    on_value:
+      - lambda: |-
+          bool target_fan_state = true;
+          bool use_preset = false;
+          const char *target_preset = "Auto";
+          int target_speed = 1;
+          bool permanent = false;
+
+          if (x == "AUTO" || x == "AUT0" || x == "AUT1" || x == "AUT2" || x == "AUT3") {
+            target_fan_state = true;
+            use_preset = true;
+            target_preset = "Auto";
+          } else if (x == "MAN1" || x == "CNT1") {
+            target_fan_state = true;
+            target_speed = 1;
+            permanent = (x == "CNT1");
+          } else if (x == "MAN2" || x == "CNT2") {
+            target_fan_state = true;
+            target_speed = 2;
+            permanent = (x == "CNT2");
+          } else if (x == "MAN3" || x == "CNT3") {
+            target_fan_state = true;
+            target_speed = 3;
+            permanent = (x == "CNT3");
+          } else if (x == "EMPT") {
+            target_fan_state = false;
+            use_preset = true;
+            target_preset = "Away";
+          } else {
+            return;
+          }
+
+          bool switch_changed = (id(ventilation_permanent_switch).state != permanent);
+
+          bool fan_changed = (id(duco_ventilation_fan).state != target_fan_state);
+          if (use_preset) {
+            fan_changed = fan_changed || (id(duco_ventilation_fan).get_preset_mode() != target_preset);
+          } else {
+            fan_changed = fan_changed || (id(duco_ventilation_fan).speed != target_speed);
+          }
+
+          if (!switch_changed && !fan_changed) {
+            return;
+          }
+
+          id(fan_sync_in_progress) = true;
+
+          if (switch_changed) {
+            id(ventilation_permanent_switch).publish_state(permanent);
+          }
+
+          if (fan_changed) {
+            auto call = id(duco_ventilation_fan).make_call();
+            call.set_state(target_fan_state);
+            if (use_preset) {
+              call.set_preset_mode(target_preset);
+            } else {
+              call.set_speed(target_speed);
+            }
+            call.perform();
+          }
+
+          id(fan_sync_in_progress) = false;
+
+  - platform: template
+    id: ventilation_mode_rf_text
+    name: "Ventilation mode RF text"
+    icon: "mdi:fan"
+
+  - platform: template
+    id: duco_network_id_text
+    name: "Duco Network ID"
+    entity_category: diagnostic
+    icon: "mdi:identifier"
+
+  - platform: template
+    id: duco_device_address_text
+    name: "Duco Device Address"
+    entity_category: diagnostic
+    icon: "mdi:numeric"
+
+globals:
+  - id: fan_sync_in_progress
+    type: bool
+    initial_value: 'false'
+
+number:
+  - platform: template
+    id: ventilation_percentage_number
+    name: "Ventilation Percentage"
+    icon: "mdi:percent"
+    optimistic: true
+    min_value: 0
+    max_value: 100
+    step: 1
+    initial_value: 0
+    mode: box
+    set_action:
+      - lambda: |-
+          // Note that percentage set is only honored by the ventilation when it is set higher than the current determined demand in auto mode.
+          id(duco_rf_gw).request_ventilation_mode(0, false, x, 1);
+
+switch:
+  - platform: template
+    id: ventilation_permanent_switch
+    name: "Ventilation Permanent"
+    icon: "mdi:pin"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    turn_on_action:
+      - lambda: |-
+          if (id(fan_sync_in_progress)) {
+            return;
+          }
+
+          uint8_t mode = 0;
+
+          if (!id(duco_ventilation_fan).state) {
+            mode = 7;  // Off maps to Away
+          } else {
+            const std::string preset = id(duco_ventilation_fan).get_preset_mode();
+            if (preset == "Away") {
+              mode = 7;
+            } else if (preset == "Auto") {
+              mode = 0;
+            } else if (id(duco_ventilation_fan).speed == 1) {
+              mode = 4;
+            } else if (id(duco_ventilation_fan).speed == 2) {
+              mode = 5;
+            } else {
+              mode = 6;
+            }
+          }
+
+          id(duco_rf_gw).request_ventilation_mode(mode, true, 0, 1);
+    turn_off_action:
+      - lambda: |-
+          if (id(fan_sync_in_progress)) {
+            return;
+          }
+
+          uint8_t mode = 0;
+
+          if (!id(duco_ventilation_fan).state) {
+            mode = 7;  // Off maps to Away
+          } else {
+            const std::string preset = id(duco_ventilation_fan).get_preset_mode();
+            if (preset == "Away") {
+              mode = 7;
+            } else if (preset == "Auto") {
+              mode = 0;
+            } else if (id(duco_ventilation_fan).speed == 1) {
+              mode = 4;
+            } else if (id(duco_ventilation_fan).speed == 2) {
+              mode = 5;
+            } else {
+              mode = 6;
+            }
+          }
+
+          id(duco_rf_gw).request_ventilation_mode(mode, false, 0, 1);
+
+fan:
+  - platform: template
+    id: duco_ventilation_fan
+    name: "Duco Ventilation"
+    icon: "mdi:fan"
+    speed_count: 3
+    preset_modes:
+      - "Auto"
+      - "Away"
+    on_turn_on:
+      - lambda: |-
+          if (id(fan_sync_in_progress)) {
+            return;
+          }
+          const bool permanent = id(ventilation_permanent_switch).state;
+          id(duco_rf_gw).request_ventilation_mode(4, permanent, 0, 1);
+    on_turn_off:
+      - lambda: |-
+          if (id(fan_sync_in_progress)) {
+            return;
+          }
+          const bool permanent = id(ventilation_permanent_switch).state;
+          id(duco_rf_gw).request_ventilation_mode(7, permanent, 0, 1);
+    on_speed_set:
+      - lambda: |-
+          if (id(fan_sync_in_progress)) {
+            return;
+          }
+          const bool permanent = id(ventilation_permanent_switch).state;
+          uint8_t mode = 4;
+          if (id(duco_ventilation_fan).speed == 2) {
+            mode = 5;
+          } else if (id(duco_ventilation_fan).speed >= 3) {
+            mode = 6;
+          }
+          id(duco_rf_gw).request_ventilation_mode(mode, permanent, 0, 1);
+    on_preset_set:
+      - lambda: |-
+          if (id(fan_sync_in_progress)) {
+            return;
+          }
+          const std::string preset = id(duco_ventilation_fan).get_preset_mode();
+          if (preset.empty()) {
+            ESP_LOGD("duco_rf", "Fan preset cleared after manual speed change; ignoring preset callback");
+            return;
+          }
+          if (preset != "Auto" && preset != "Away") {
+            ESP_LOGW("duco_rf", "Fan preset set callback received unknown preset=%s; ignoring", preset.c_str());
+            return;
+          }
+          const bool permanent = id(ventilation_permanent_switch).state;
+          uint8_t mode = 0;
+          if (preset == "Away") {
+            mode = 7;
+          }
+          id(duco_rf_gw).request_ventilation_mode(mode, permanent, 0, 1);
+
+button:
+  - platform: template
+    name: "Log All Duco Nodes"
+    icon: "mdi:format-list-bulleted"
+    entity_category: config
+    on_press:
+      - lambda: 'id(duco_gateway_gw).log_all_nodes();'
+
+  - platform: template
+    name: "Pair"
+    icon: "mdi:link-variant"
+    entity_category: config
+    on_press:
+      - lambda: 'id(duco_rf_gw).pair();'
+
+  - platform: template
+    name: "Unpair"
+    icon: "mdi:link-variant-off"
+    entity_category: config
+    on_press:
+      - lambda: 'id(duco_rf_gw).unpair();'
+
+  - platform: template
+    name: "Enable Installer Mode"
+    icon: "mdi:restart"
+    entity_category: config
+    on_press:
+      - lambda: 'id(duco_rf_gw).enable_installer_mode();'
+
+  - platform: template
+    name: "Disable Installer Mode"
+    icon: "mdi:stop"
+    entity_category: config
+    on_press:
+      - lambda: 'id(duco_rf_gw).disable_installer_mode();'
