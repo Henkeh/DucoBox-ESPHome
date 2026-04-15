@@ -266,14 +266,14 @@ class DucoRF : public Component, public cc1101::CC1101Listener {
 
   static const char *mode_to_string_(uint8_t mode) {
     switch (mode) {
-      case 0:  return "Auto";
-      case 1:  return "Temporary low";
-      case 2:  return "Temporary medium";
-      case 3:  return "Temporary high";
-      case 4:  return "Away";
-      case 11: return "Permanent low";
-      case 12: return "Permanent medium";
-      case 13: return "Permanent high";
+      case 0:  return "AUTO";
+      case 1:  return "MAN1";
+      case 2:  return "MAN2";
+      case 3:  return "MAN3";
+      case 4:  return "EMPT";
+      case 11: return "CNT1";
+      case 12: return "CNT2";
+      case 13: return "CNT3";
       default: return "Unknown";
     }
   }
