@@ -1,0 +1,161 @@
+# Include components
+external_components:
+  - source: github://Henkeh/DucoBox-ESPHome@main
+    components: [duco_gateway]
+
+# Enable Home Assistant API
+api:
+
+# Configure OTA
+ota:
+  - platform: esphome
+    password: ""              # Change to a secure password if used in a non-secure environment
+
+# Configure WiFi
+wifi:
+  ssid: "DummySSID"           # Change to your WiFi SSID
+  password: "DummyPassword"   # Change to your WiFi password
+  use_address: 1.2.3.4         # Change to the desired static IP address for this device (if not using DHCP)
+  min_auth_mode: WPA2
+
+# Enable web server
+web_server:
+  port: 80
+  version: '3'
+
+# Configure ESP32 specific settings
+esp32:
+  board: esp32-s3-devkitc-1   # Change to your board if different and update pin numbers accordingly
+  cpu_frequency: 240MHz
+  variant: esp32s3
+  framework:
+    type: esp-idf
+    advanced:
+      assertion_level: DISABLE
+      compiler_optimization: PERF
+
+esphome:
+  name: ducobox-gateway
+  friendly_name: DucoBox Gateway
+
+# ── Serial gateway (read) ───────────────────────────────────────────────────
+logger:
+  baud_rate: 0
+  level: INFO
+
+# Uncomment sensor definitions below as needed; these are used by the duco_gateway component to populate the data read from the ventilation box, and can also be used for debugging or other purposes as desired
+duco_gateway:
+  id: duco_gateway_gw
+  uart_id: ducobox_uart
+  poll_interval: 5s
+  ext_sensor_node: 2    # UCCO2 node (CO2 + temp), node ID can be found by pressing the "Log All Duco Nodes" button in the UI and looking for the node marked as "UCCO2"
+  rh_sensor_node: 4     # UCRH node (humidity)
+  ##vent_mode_sensor:       sensor_vent_mode
+  vent_percentage_sensor: fan_speed_pct
+  fan_speed_sensor:       fan_speed
+  countdown_sensor:       countdown_sensor
+  box_temperature_sensor: box_temperature
+  box_humidity_sensor:    box_humidity
+  ext_co2_sensor:         livingroom_co2
+  ext_temperature_sensor: livingroom_temperature
+  ext_humidity_sensor:    bathroom_humidity
+  vent_mode_text_sensor:  ventilation_mode_text
+
+uart:
+  id: ducobox_uart
+  tx_pin: GPIO43          # Change to the correct TX pin for your board
+  rx_pin: GPIO44          # Change to the correct RX pin for your board
+  baud_rate: 115200
+
+sensor:
+  - platform: template
+    id: fan_speed_pct
+    name: "Fan Speed (%)"
+    unit_of_measurement: "%"
+    icon: "mdi:fan"
+    accuracy_decimals: 0
+    state_class: measurement
+
+  - platform: template
+    id: fan_speed
+    name: "Fan Speed"
+    unit_of_measurement: "rpm"
+    icon: "mdi:fan"
+    accuracy_decimals: 0
+    state_class: measurement
+
+  - platform: template
+    id: countdown_sensor
+    name: "Countdown"
+    icon: "mdi:fan-clock"
+    unit_of_measurement: "s"
+    accuracy_decimals: 0
+    state_class: measurement
+
+  - platform: template
+    id: box_temperature
+    name: "Box Temperature"
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    device_class: temperature
+    state_class: measurement
+
+  - platform: template
+    id: box_humidity
+    name: "Box Humidity"
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    device_class: humidity
+    state_class: measurement
+
+  - platform: template
+    id: livingroom_co2
+    name: "Livingroom CO2"
+    unit_of_measurement: "ppm"
+    accuracy_decimals: 0
+    icon: "mdi:molecule-co2"
+    device_class: carbon_dioxide
+    state_class: measurement
+
+  - platform: template
+    id: livingroom_temperature
+    name: "Livingroom Temperature"
+    unit_of_measurement: "°C"
+    accuracy_decimals: 1
+    icon: "mdi:thermometer"
+    device_class: temperature
+    state_class: measurement
+
+  - platform: template
+    id: bathroom_humidity
+    name: "Bathroom Humidity"
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    device_class: humidity
+    state_class: measurement
+
+text_sensor:
+  - platform: template
+    id: ventilation_mode_text
+    name: "Ventilation mode text"
+    icon: "mdi:fan"
+
+  - platform: template
+    id: network_id_text
+    name: "Network ID"
+    entity_category: diagnostic
+    icon: "mdi:identifier"
+
+  - platform: template
+    id: device_address_text
+    name: "Device Address"
+    entity_category: diagnostic
+    icon: "mdi:numeric"
+
+button:
+  - platform: template
+    name: "Log All Duco Nodes"
+    icon: "mdi:format-list-bulleted"
+    entity_category: config
+    on_press:
+      - lambda: 'id(duco_gateway_gw).log_all_nodes();'

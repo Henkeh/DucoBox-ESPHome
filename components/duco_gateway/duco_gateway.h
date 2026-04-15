@@ -60,6 +60,7 @@ enum SerialPhase {
   PH_NODEPARA_CO2,  // nodeparaget <ext_node> 74  → CO2 ppm
   PH_NODEPARA_TEMP, // nodeparaget <ext_node> 73  → temp /10
   PH_NODEPARA_RH,   // nodeparaget <ext_node> 75  → RH /100
+  PH_CUSTOM,        // command entered from HA text entity
   PH_FANSPEED,      // fanspeed → RPM
 };
 
@@ -85,6 +86,33 @@ class DucoGateway : public Component, public uart::UARTDevice {
   // Request an immediate network dump with all discovered nodes in logs.
   void log_all_nodes() {
     log_all_nodes_requested_ = true;
+  }
+
+  // Queue a custom command to be sent when the gateway is idle.
+  void send_custom_command(const std::string &command) {
+    if (phase_ != PH_IDLE || custom_command_requested_) {
+      ESP_LOGW(TAG, "Cannot queue custom command while busy (phase %d)", (int) phase_);
+      return;
+    }
+
+    size_t start = command.find_first_not_of(" \t\r\n");
+    if (start == std::string::npos) {
+      ESP_LOGW(TAG, "Ignoring empty custom command");
+      return;
+    }
+
+    size_t end = command.find_last_not_of(" \t\r\n");
+    std::string trimmed = command.substr(start, end - start + 1);
+
+    if (trimmed.size() >= sizeof(custom_command_)) {
+      ESP_LOGW(TAG, "Custom command too long (%u >= %u)", (unsigned) trimmed.size(), (unsigned) sizeof(custom_command_));
+      return;
+    }
+
+    strncpy(custom_command_, trimmed.c_str(), sizeof(custom_command_) - 1);
+    custom_command_[sizeof(custom_command_) - 1] = '\0';
+    custom_command_requested_ = true;
+    ESP_LOGI(TAG, "Queued custom command: %s", custom_command_);
   }
 
   // ── ESPHome lifecycle ─────────────────────────────────────────────────────
@@ -126,6 +154,14 @@ class DucoGateway : public Component, public uart::UARTDevice {
     rx_pump();
 
     if (phase_ == PH_IDLE) {
+      if (custom_command_requested_) {
+        custom_command_requested_ = false;
+        char cmd[136];
+        snprintf(cmd, sizeof(cmd), "%s\r\n", custom_command_);
+        send_command(cmd, PH_CUSTOM);
+        return;
+      }
+
       if (log_all_nodes_requested_) {
         log_all_nodes_requested_ = false;
         log_all_nodes_active_ = true;
@@ -160,7 +196,9 @@ class DucoGateway : public Component, public uart::UARTDevice {
   bool        log_all_nodes_active_{false};
   bool        nodeparaget_in_flight_{false};
   bool        phase_timed_out_{false};
+  bool        custom_command_requested_{false};
   uint32_t    poll_interval_ms_{15000};
+  char        custom_command_[128] {0};
 
   // Network table column indices (resolved from header row)
   uint8_t col_stat_   {255};
@@ -258,6 +296,22 @@ class DucoGateway : public Component, public uart::UARTDevice {
   // ── Line parser ───────────────────────────────────────────────────────────
   void process_line(const char *line) {
     ESP_LOGD(TAG, "RX << \"%s\"", line);
+
+    if (phase_ == PH_CUSTOM) {
+      if (strstr(line, "Done") != nullptr) {
+        ESP_LOGI(TAG, "CMD << Done");
+        got_done_ = true;
+        return;
+      }
+      if (strstr(line, "Failed") != nullptr) {
+        ESP_LOGW(TAG, "CMD << Failed");
+        got_done_ = true;
+        return;
+      }
+
+      ESP_LOGI(TAG, "CMD << %s", line);
+      return;
+    }
 
     if (strstr(line, "Done") != nullptr) { got_done_ = true; return; }
     if (strstr(line, "Failed") != nullptr) {
@@ -498,6 +552,10 @@ class DucoGateway : public Component, public uart::UARTDevice {
 
       case PH_NODEPARA_RH:
         go_to_fanspeed();
+        break;
+
+      case PH_CUSTOM:
+        phase_ = PH_IDLE;
         break;
 
       case PH_FANSPEED:

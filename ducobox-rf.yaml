@@ -1,7 +1,7 @@
 # Include components
 external_components:
   - source: github://Henkeh/DucoBox-ESPHome@main
-    components: [duco_gateway, duco_rf]
+    components: [duco_rf]
 
 # Enable Home Assistant API
 api:
@@ -15,7 +15,7 @@ ota:
 wifi:
   ssid: "DummySSID"           # Change to your WiFi SSID
   password: "DummyPassword"   # Change to your WiFi password
-  use_address: 1.2.3.4        # Change to the desired static IP address for this device (if not using DHCP)
+  use_address: 1.2.3.4         # Change to the desired static IP address for this device (if not using DHCP)
   min_auth_mode: WPA2
 
 # Enable web server
@@ -35,8 +35,8 @@ esp32:
       compiler_optimization: PERF
 
 esphome:
-  name: ducobox
-  friendly_name: DucoBox
+  name: ducobox-rf
+  friendly_name: DucoBox RF
   on_boot:
     - priority: -10
       then:
@@ -45,36 +45,11 @@ esphome:
         - lambda: |-
             id(duco_rf_gw).request_ventilation_mode(0, false, 0, 1);
 
-# ── Serial gateway (read) ───────────────────────────────────────────────────
+# ── RF gateway (write) ────────────────────────────────────────────────────
 logger:
   baud_rate: 0
   level: INFO
 
-# Uncomment sensor definitions below as needed; these are used by the duco_gateway component to populate the data read from the ventilation box, and can also be used for debugging or other purposes as desired
-duco_gateway:
-  id: duco_gateway_gw
-  uart_id: ducobox_uart
-  poll_interval: 5s
-  ext_sensor_node: 2    # UCCO2 node (CO2 + temp), node ID can be found by pressing the "Log All Duco Nodes" button in the UI and looking for the node marked as "UCCO2"
-  rh_sensor_node: 4     # UCRH node (humidity)
-  ##vent_mode_sensor:       sensor_vent_mode
-  vent_percentage_sensor: fan_speed_pct
-  fan_speed_sensor:       fan_speed
-  countdown_sensor:       countdown_sensor
-  box_temperature_sensor: box_temperature
-  box_humidity_sensor:    box_humidity
-  ext_co2_sensor:         livingroom_co2
-  ext_temperature_sensor: livingroom_temperature
-  ext_humidity_sensor:    bathroom_humidity
-  vent_mode_text_sensor:  ventilation_mode_text
-
-uart:
-  id: ducobox_uart
-  tx_pin: GPIO43          # Change to the correct TX pin for your board
-  rx_pin: GPIO44          # Change to the correct RX pin for your board
-  baud_rate: 115200
-
-# ── RF gateway (write) ────────────────────────────────────────────────────
 duco_rf:
   id: duco_rf_gw
   cc1101_id: duco_cc1101
@@ -112,143 +87,7 @@ spi:
   miso_pin: GPIO04      # Change to the correct MISO pin for your board
   mosi_pin: GPIO01      # Change to the correct MOSI pin for your board
 
-# All outputs
-sensor:
-  - platform: template
-    id: fan_speed_pct
-    name: "Fan Speed (%)"
-    unit_of_measurement: "%"
-    icon: "mdi:fan"
-    accuracy_decimals: 0
-    state_class: measurement
-
-  - platform: template
-    id: fan_speed
-    name: "Fan Speed"
-    unit_of_measurement: "rpm"
-    icon: "mdi:fan"
-    accuracy_decimals: 0
-    state_class: measurement
-
-  - platform: template
-    id: countdown_sensor
-    name: "Countdown"
-    icon: "mdi:fan-clock"
-    unit_of_measurement: "s"
-    accuracy_decimals: 0
-    state_class: measurement
-
-  - platform: template
-    id: box_temperature
-    name: "Box Temperature"
-    unit_of_measurement: "°C"
-    accuracy_decimals: 1
-    device_class: temperature
-    state_class: measurement
-
-  - platform: template
-    id: box_humidity
-    name: "Box Humidity"
-    unit_of_measurement: "%"
-    accuracy_decimals: 0
-    device_class: humidity
-    state_class: measurement
-
-  - platform: template
-    id: livingroom_co2
-    name: "Livingroom CO2"
-    unit_of_measurement: "ppm"
-    accuracy_decimals: 0
-    icon: "mdi:molecule-co2"
-    device_class: carbon_dioxide
-    state_class: measurement
-
-  - platform: template
-    id: livingroom_temperature
-    name: "Livingroom Temperature"
-    unit_of_measurement: "°C"
-    accuracy_decimals: 1
-    icon: "mdi:thermometer"
-    device_class: temperature
-    state_class: measurement
-
-  - platform: template
-    id: bathroom_humidity
-    name: "Bathroom Humidity"
-    unit_of_measurement: "%"
-    accuracy_decimals: 0
-    device_class: humidity
-    state_class: measurement
-
 text_sensor:
-  - platform: template
-    id: ventilation_mode_text
-    name: "Ventilation mode text"
-    icon: "mdi:fan"
-    on_value:
-      - lambda: |-
-          bool target_fan_state = true;
-          bool use_preset = false;
-          const char *target_preset = "Auto";
-          int target_speed = 1;
-          bool permanent = false;
-
-          if (x == "AUTO" || x == "AUT0" || x == "AUT1" || x == "AUT2" || x == "AUT3") {
-            target_fan_state = true;
-            use_preset = true;
-            target_preset = "Auto";
-          } else if (x == "MAN1" || x == "CNT1") {
-            target_fan_state = true;
-            target_speed = 1;
-            permanent = (x == "CNT1");
-          } else if (x == "MAN2" || x == "CNT2") {
-            target_fan_state = true;
-            target_speed = 2;
-            permanent = (x == "CNT2");
-          } else if (x == "MAN3" || x == "CNT3") {
-            target_fan_state = true;
-            target_speed = 3;
-            permanent = (x == "CNT3");
-          } else if (x == "EMPT") {
-            target_fan_state = false;
-            use_preset = true;
-            target_preset = "Away";
-          } else {
-            return;
-          }
-
-          bool switch_changed = (id(ventilation_permanent_switch).state != permanent);
-
-          bool fan_changed = (id(duco_ventilation_fan).state != target_fan_state);
-          if (use_preset) {
-            fan_changed = fan_changed || (id(duco_ventilation_fan).get_preset_mode() != target_preset);
-          } else {
-            fan_changed = fan_changed || (id(duco_ventilation_fan).speed != target_speed);
-          }
-
-          if (!switch_changed && !fan_changed) {
-            return;
-          }
-
-          id(fan_sync_in_progress) = true;
-
-          if (switch_changed) {
-            id(ventilation_permanent_switch).publish_state(permanent);
-          }
-
-          if (fan_changed) {
-            auto call = id(duco_ventilation_fan).make_call();
-            call.set_state(target_fan_state);
-            if (use_preset) {
-              call.set_preset_mode(target_preset);
-            } else {
-              call.set_speed(target_speed);
-            }
-            call.perform();
-          }
-
-          id(fan_sync_in_progress) = false;
-
   - platform: template
     id: ventilation_mode_rf_text
     name: "Ventilation mode RF text"
@@ -405,13 +244,6 @@ fan:
           id(duco_rf_gw).request_ventilation_mode(mode, permanent, 0, 1);
 
 button:
-  - platform: template
-    name: "Log All Duco Nodes"
-    icon: "mdi:format-list-bulleted"
-    entity_category: config
-    on_press:
-      - lambda: 'id(duco_gateway_gw).log_all_nodes();'
-
   - platform: template
     name: "Pair"
     icon: "mdi:link-variant"

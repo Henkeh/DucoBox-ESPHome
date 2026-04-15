@@ -1,0 +1,17 @@
+packages:
+  - !include ducobox.yaml
+
+# Can be used to send arbitrary custom commands to the ventilation box for testing or debugging purposes; not intended for regular use. Some commands can be found at https://arnemauer.nl/wp-content/uploads/all-commands.txt.
+text:
+  - platform: template
+    id: gateway_command
+    name: "Gateway Command"
+    icon: "mdi:console-line"
+    optimistic: true
+    mode: text
+    min_length: 1
+    max_length: 120
+    entity_category: diagnostic
+    set_action:
+      - lambda: |-
+          id(duco_gateway_gw).send_custom_command(x);
