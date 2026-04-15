@@ -34,6 +34,7 @@ namespace esphome {
 namespace duco_rf {
 
 static const char *const TAG = "duco_rf";
+static const int kFixedTemperature = 210;
 
 struct PersistedNetworkState {
   uint8_t version;
@@ -50,8 +51,6 @@ class DucoRF : public Component, public cc1101::CC1101Listener {
     network_id_[0] = b0; network_id_[1] = b1;
     network_id_[2] = b2; network_id_[3] = b3;
   }
-  void set_radio_power(uint8_t p)   { radio_power_ = p; }
-  void set_temperature(int t)        { temperature_ = t; }  // e.g. 210 = 21.0 °C
 
   // Sensors
   void set_vent_mode_sensor(sensor::Sensor *s)                { vent_mode_sensor_ = s; }
@@ -83,17 +82,16 @@ class DucoRF : public Component, public cc1101::CC1101Listener {
     this->network_state_pref_ = global_preferences->make_preference<PersistedNetworkState>(0x4455434F, true);
     this->load_persisted_network_state_();
 
-    ESP_LOGI(TAG, "Initialising Duco RF (addr=%u netid=%02X%02X%02X%02X pwr=0x%02X temp=%d)",
+    ESP_LOGI(TAG, "Initialising Duco RF (addr=%u netid=%02X%02X%02X%02X temp=%d)",
              device_address_,
              network_id_[0], network_id_[1], network_id_[2], network_id_[3],
-             radio_power_, temperature_);
+         kFixedTemperature);
 
     // Configure the library
     rf_.setLogRFMessages(false);
     rf_.setGatewayAddress(device_address_);
     rf_.setNetworkId(network_id_);
-    rf_.setRadioPower(radio_power_);
-    rf_.setTemperature(temperature_);
+    rf_.setTemperature(kFixedTemperature);
     rf_.set_tx_callback([this](const std::vector<uint8_t> &payload) {
       this->log_packet("TX", payload, 0.0f, 0);
       return this->cc1101_->transmit_packet(payload) == cc1101::CC1101Error::NONE;
@@ -165,8 +163,6 @@ class DucoRF : public Component, public cc1101::CC1101Listener {
   cc1101::CC1101Component *cc1101_{nullptr};
   uint8_t device_address_{0};
   uint8_t network_id_[4] {0x00, 0x00, 0x00, 0x00};
-  uint8_t radio_power_   {0x8D};
-  int     temperature_   {210};  // 21.0 °C
 
   // ── Sensors ───────────────────────────────────────────────────────────────
   sensor::Sensor           *vent_mode_sensor_      {nullptr};

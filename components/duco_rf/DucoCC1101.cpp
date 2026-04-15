@@ -16,7 +16,6 @@ DucoCC1101::DucoCC1101(uint8_t counter, uint8_t sendTries)
 {
 	this->sendTries = sendTries;
 	this->deviceAddress = 0;
-	this->radioPower = 0xC1; // default radio power 0xC1 = 10,3dBm @ 868mhz
 	this->messageReceivedCounter = 0;
 	this->messageSentCounter = 0;
 	this->messageCounter = 1; // for messages out NEVER ZERO!
@@ -782,11 +781,6 @@ void DucoCC1101::setNetworkId(uint8_t newNetworkId[4]){
 
 void DucoCC1101::setLogRFMessages(bool logRFMessages){
 	this->logRFMessages = logRFMessages;
-}
-
-//get/set radio power
-void DucoCC1101::setRadioPower(uint8_t radioPower){
-	this->radioPower = radioPower;
 }
 
 void DucoCC1101::parseMessageCommand(uint8_t inboxQMessageNumber)

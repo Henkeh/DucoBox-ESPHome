@@ -109,7 +109,6 @@ class DucoCC1101 {
 		uint8_t sendTries;						//number of times a command is send at one button press
 
 		uint8_t deviceAddress;
-		uint8_t radioPower;
 		uint8_t networkId[4];
 
 		//uint8_t pingCounter;
@@ -159,10 +158,6 @@ class DucoCC1101 {
 		//deviceid
 		void setGatewayAddress(uint8_t deviceAddress); // if this function name is "setDeviceAddress" the esp8266 crashes on sendData
 		uint8_t getDeviceAddress() { return this->deviceAddress; }
-
-		//get/set radio power
-		void setRadioPower(uint8_t radioPower);
-		uint8_t getRadioPower() { return radioPower; }
 
 		//networkid
 		void setNetworkId(uint8_t newNetworkId[4]);

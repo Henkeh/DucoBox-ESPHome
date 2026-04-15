@@ -78,8 +78,6 @@ uart:
 duco_rf:
   id: duco_rf_gw
   cc1101_id: duco_cc1101
-  radio_power: 0x8D
-  temperature: 210        # 21.0 °C dummy value
   vent_mode_text_sensor: ventilation_mode_rf_text
   network_id_text_sensor: network_id_text
   device_address_text_sensor: device_address_text
