@@ -1,6 +1,6 @@
 # Include components
 external_components:
-  - source: github://Henkeh/DucoBox-ESPHome
+  - source: github://Henkeh/DucoBox-ESPHome@main
     components: [duco_gateway, duco_rf]
 
 # Enable Home Assistant API
