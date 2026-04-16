@@ -15,14 +15,16 @@ CONF_VENT_MODE_SENSOR = "vent_mode_sensor"
 CONF_VENT_MODE_TEXT   = "vent_mode_text_sensor"
 CONF_NETWORK_ID_TEXT  = "network_id_text_sensor"
 CONF_DEVICE_ADDRESS_TEXT = "device_address_text_sensor"
+CONF_LOG_RF_MESSAGES = "log_rf_messages"
 
 CONFIG_SCHEMA = cv.Schema({
     cv.GenerateID(): cv.declare_id(DucoRF),
     cv.Required(CONF_CC1101_ID):                        cv.use_id(cc1101.CC1101Component),
-    cv.Optional(CONF_VENT_MODE_SENSOR): cv.use_id(sensor.Sensor),
-    cv.Optional(CONF_VENT_MODE_TEXT):   cv.use_id(text_sensor.TextSensor),
-    cv.Optional(CONF_NETWORK_ID_TEXT):  cv.use_id(text_sensor.TextSensor),
-    cv.Optional(CONF_DEVICE_ADDRESS_TEXT): cv.use_id(text_sensor.TextSensor),
+    cv.Optional(CONF_VENT_MODE_SENSOR):                 cv.use_id(sensor.Sensor),
+    cv.Optional(CONF_VENT_MODE_TEXT):                   cv.use_id(text_sensor.TextSensor),
+    cv.Optional(CONF_NETWORK_ID_TEXT):                  cv.use_id(text_sensor.TextSensor),
+    cv.Optional(CONF_DEVICE_ADDRESS_TEXT):              cv.use_id(text_sensor.TextSensor),
+    cv.Optional(CONF_LOG_RF_MESSAGES, default=False):   cv.boolean,
 }).extend(cv.COMPONENT_SCHEMA)
 
 
@@ -31,6 +33,7 @@ async def to_code(config):
     await cg.register_component(var, config)
     cc1101_var = await cg.get_variable(config[CONF_CC1101_ID])
     cg.add(var.set_cc1101(cc1101_var))
+    cg.add(var.set_log_rf_messages(config[CONF_LOG_RF_MESSAGES]))
 
     if CONF_VENT_MODE_SENSOR in config:
         s = await cg.get_variable(config[CONF_VENT_MODE_SENSOR])

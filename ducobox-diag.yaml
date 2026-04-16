@@ -1,6 +1,9 @@
 packages:
   - !include ducobox.yaml
 
+logger:
+  level: DEBUG
+
 # Can be used to send arbitrary custom commands to the ventilation box for testing or debugging purposes; not intended for regular use. Some commands can be found at https://arnemauer.nl/wp-content/uploads/all-commands.txt.
 text:
   - platform: template
@@ -15,3 +18,6 @@ text:
     set_action:
       - lambda: |-
           id(duco_gateway_gw).send_custom_command(x);
+
+duco_rf:
+  log_rf_messages: true     # Note that the log level must be set to DEBUG for the log messages to be populated; this is not recommended for regular use due to the large number of log messages generated.

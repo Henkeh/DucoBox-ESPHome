@@ -5,14 +5,6 @@
  * Wraps the original DucoCC1101 library by Arne Mauer.
  * Source: github.com/arnemauer/Ducobox-ESPEasy-Plugin/tree/master/lib/Duco
  *
- * Hardware (Wemos D1 Mini, gateway v8.3):
- *   CLK   → GPIO14 (D5)   SPI bus
- *   MISO  → GPIO12 (D6)   SPI bus
- *   MOSI  → GPIO13 (D7)   SPI bus
- *   CSN   → GPIO15 (D8)   SS pin, used internally by CC1101 via Arduino SPI
- *   GDO2  → GPIO5  (D1)   interrupt: asserts on valid packet with CRC OK
- *   LED   → GPIO4  (D2)   optional activity LED
- *
  * Place these files from arnemauer's repo into components/duco_rf/:
  *   duco_rf.h DucoCC1101.h  DucoCC1101.cpp
  */
@@ -57,6 +49,7 @@ class DucoRF : public Component, public cc1101::CC1101Listener {
   void set_vent_mode_text_sensor(text_sensor::TextSensor *s)  { vent_mode_text_sensor_ = s; }
   void set_network_id_text_sensor(text_sensor::TextSensor *s) { network_id_text_sensor_ = s; }
   void set_device_address_text_sensor(text_sensor::TextSensor *s) { device_address_text_sensor_ = s; }
+  void set_log_rf_messages(bool log_rf_messages) { log_rf_messages_ = log_rf_messages; }
 
   void on_packet(const std::vector<uint8_t> &packet, float, float rssi, uint8_t lqi) override {
     this->log_packet("RX", packet, rssi, lqi);
@@ -88,7 +81,7 @@ class DucoRF : public Component, public cc1101::CC1101Listener {
          kFixedTemperature);
 
     // Configure the library
-    rf_.setLogRFMessages(false);
+    rf_.setLogRFMessages(log_rf_messages_);
     rf_.setGatewayAddress(device_address_);
     rf_.setNetworkId(network_id_);
     rf_.setTemperature(kFixedTemperature);
@@ -176,6 +169,7 @@ class DucoRF : public Component, public cc1101::CC1101Listener {
   uint8_t last_network_id_[4] {0xFF, 0xFF, 0xFF, 0xFF};
   uint8_t last_device_address_ {0xFF};
   ESPPreferenceObject network_state_pref_;
+  bool log_rf_messages_{false};
   bool initial_subscribe_pending_{false};
   uint32_t initial_subscribe_started_at_{0};
 
