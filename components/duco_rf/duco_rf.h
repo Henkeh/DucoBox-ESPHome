@@ -137,6 +137,12 @@ class DucoRF : public Component, public cc1101::CC1101Listener {
    *  percentage: sensor demand percentage (0 = not used)
    */
   void request_ventilation_mode(uint8_t mode, bool permanent = false, uint8_t percentage = 0) {
+    // AWAY/NOTHOME (mode 7) does not support a permanent flag in Duco packets.
+    if (mode == 7 && permanent) {
+      ESP_LOGD(TAG, "Mode 7 (Away) ignores permanent=true; forcing permanent=false");
+      permanent = false;
+    }
+
     ESP_LOGI(TAG, "Requesting mode=%s, permanent=%s, percentage=%s", mode_to_string_(map_vent_mode_(mode, permanent)), permanent ? "yes" : "no", percentage_to_string_(percentage));
     rf_.requestVentilationMode(mode, permanent, percentage);
     // // Immediate local feedback; RF confirmations can still update this later.
@@ -232,6 +238,7 @@ class DucoRF : public Component, public cc1101::CC1101Listener {
         case 4: mapped = 11; break;  // CNT1
         case 5: mapped = 12; break;  // CNT2
         case 6: mapped = 13; break;  // CNT3
+        case 7: mapped =  4; break;  // EMPT (Away is never a permanent mode)
         default: mapped = raw; break;
       }
     }
@@ -262,7 +269,10 @@ class DucoRF : public Component, public cc1101::CC1101Listener {
       case 11: return "CNT1";
       case 12: return "CNT2";
       case 13: return "CNT3";
-      default: return "Unknown";
+      default: {
+        ESP_LOGI(TAG, "Unknown ventilation mode: %u", mode);
+        return "Unknown";
+      }
     }
   }
 

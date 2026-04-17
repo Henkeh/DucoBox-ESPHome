@@ -1077,10 +1077,6 @@ void DucoCC1101::sendNodeParameterValue(uint8_t outboxQMessageNumber, uint8_t in
 	}
 }
 
-
-
-
-
 void DucoCC1101::sendAck(uint8_t inboxQMessageNumber){
 	// get a free spot in OutboxQ
 	uint8_t outboxQMessageNumber = getOutboxQFreeSpot();
@@ -1107,7 +1103,6 @@ void DucoCC1101::prefillDucoPacket(DucoPacket *ducoOutPacket, uint8_t destinatio
 	prefillDucoPacket(ducoOutPacket, destinationAddress, this->deviceAddress, destinationAddress);
 }
 
-
 void DucoCC1101::prefillDucoPacket(DucoPacket *ducoOutPacket, uint8_t destinationAddress, uint8_t originalSourceAddress, uint8_t originalDestinationAddress ){
 	ducoOutPacket->sourceAddress =  this->deviceAddress;
 	ducoOutPacket->destinationAddress = destinationAddress;
@@ -1115,7 +1110,6 @@ void DucoCC1101::prefillDucoPacket(DucoPacket *ducoOutPacket, uint8_t destinatio
 	ducoOutPacket->originalDestinationAddress = originalDestinationAddress;
 	memcpy(ducoOutPacket->networkId,networkId,4 );
 }
-
 
 // set commandLength in commandsLength
 // commandlength is het command + response bytes
@@ -1142,7 +1136,6 @@ void DucoCC1101::setCommandLength(DucoPacket *ducoOutPacket, uint8_t commandNumb
 	ducoOutPacket->data[commandByte] |= commandLength & bitmask;  // Put  4 bits from original in result.
 }
 
-
 // pass two bytes (commandLengthByte1 & 2 ) and the command number (1-4) to this function and received the length in bytes
 uint8_t DucoCC1101::getCommandLength(uint8_t commandLengthByte1, uint8_t commandLengthByte2, uint8_t commandNumber){
 
@@ -1157,8 +1150,6 @@ uint8_t DucoCC1101::getCommandLength(uint8_t commandLengthByte1, uint8_t command
 		return (commandLengthByte1 & 0b00001111);
 	}
 }
-
-
 
 void DucoCC1101::ducoToCC1101Packet(DucoPacket *duco, CC1101Packet *packet)
 {
@@ -1216,11 +1207,9 @@ void DucoCC1101::requestVentilationMode(uint8_t ventilationMode, bool setPermane
 	setLogMessage("requestVentilationMode();");
 
 	if(ventilationMode <= 7){
-		// TODO: store percentage in memory till ventilationmode changes?
-
 		sendVentilationModeMessage(setPermanentVentilationMode, true, ventilationMode, percentage, this->temperature, false, false, buttonPresses);
-	}else{
-			setLogMessage("Invalid ventilationmode requested.");
+	} else {
+		setLogMessage("Invalid ventilationmode requested.");
 	}
 }
 
