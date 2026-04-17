@@ -1356,5 +1356,5 @@ void DucoCC1101::disableInstallerMode(){
 
 	outboxQ[outboxQMessageNumber].waitForAck = true;
 	sendDataToDuco(&outMessage,outboxQMessageNumber);
-	setLogMessage("SEND disableInstallerMode done!");
+	setLogMessage("Send disableInstallerMode done!");
 }
