@@ -5,10 +5,6 @@
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 
-#if defined(USE_ESP32)
-#include <driver/gpio.h>
-#endif
-
 namespace esphome {
 namespace duco_gateway {
 
@@ -68,7 +64,6 @@ enum SerialPhase {
 class DucoGateway : public Component, public uart::UARTDevice {
  public:
   // ── Sensor setters ────────────────────────────────────────────────────────
-  void set_serial_switch_pin(uint8_t pin)                    { serial_switch_pin_ = pin; serial_switch_configured_ = true; }
   void set_ext_sensor_node(uint8_t n)                        { ext_node_ = n; }
   void set_rh_sensor_node(uint8_t n)                         { rh_node_  = n; }
   void set_vent_mode_sensor(sensor::Sensor *s)               { vent_mode_ = s; }
@@ -121,22 +116,6 @@ class DucoGateway : public Component, public uart::UARTDevice {
   void setup() override {
     ESP_LOGI(TAG, "DucoGateway setup()");
 
-#if defined(USE_ESP32)
-    if (serial_switch_configured_) {
-      // HIGH = ESP UART connected to Ducobox (normal operation)
-      // LOW  = external UART/USB connected to Ducobox (service mode)
-      auto gpio = static_cast<gpio_num_t>(serial_switch_pin_);
-      gpio_reset_pin(gpio);
-      gpio_set_direction(gpio, GPIO_MODE_OUTPUT);
-      gpio_set_level(gpio, 1);
-      ESP_LOGI(TAG, "Serial switch GPIO%u = HIGH (ESP UART -> Ducobox)", serial_switch_pin_);
-    } else {
-      ESP_LOGI(TAG, "No serial switch pin configured; skipping UART mux control");
-    }
-#else
-    ESP_LOGE(TAG, "duco_gateway requires ESP32 platform");
-#endif
-
     delay(200);
     flush_rx();
     setup_done_ = true;
@@ -180,9 +159,6 @@ class DucoGateway : public Component, public uart::UARTDevice {
  protected:
   static constexpr const char *TAG               = "duco_serial";
   static constexpr uint32_t    CMD_TIMEOUT_MS    = 8000;   // Should be enough even for slow responses, but short enough to recover from errors. Ducobox is usually very fast (responds in <100ms) but can be slow when the network table grows large or communication is bad with one of the nodes. Duco fails the command after roughly 5 seconds, but we set a slightly longer timeout here to also cover the case where we miss the "Failed" response.
-
-  uint8_t serial_switch_pin_ {0};
-  bool    serial_switch_configured_ {false};
 
   SerialPhase phase_        {PH_IDLE};
   uint32_t    cmd_sent_ms_  {0};

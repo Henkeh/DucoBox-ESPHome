@@ -10,7 +10,6 @@ duco_gateway_ns = cg.esphome_ns.namespace("duco_gateway")
 DucoGateway = duco_gateway_ns.class_("DucoGateway", cg.Component, uart.UARTDevice)
 
 # Node addresses
-CONF_SERIAL_SWITCH_PIN = "serial_switch_pin"
 CONF_EXT_SENSOR_NODE = "ext_sensor_node"
 CONF_RH_SENSOR_NODE = "rh_sensor_node"
 CONF_POLL_INTERVAL = "poll_interval"
@@ -31,7 +30,6 @@ CONFIG_SCHEMA = (
     cv.Schema({
         cv.GenerateID(): cv.declare_id(DucoGateway),
         # Core behavior
-        cv.Optional(CONF_SERIAL_SWITCH_PIN): cv.uint8_t,
         cv.Optional(CONF_POLL_INTERVAL, default="15s"): cv.positive_time_period_milliseconds,
 
         # Optional external node addressing
@@ -58,9 +56,6 @@ async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     await uart.register_uart_device(var, config)
-
-    if CONF_SERIAL_SWITCH_PIN in config:
-        cg.add(var.set_serial_switch_pin(config[CONF_SERIAL_SWITCH_PIN]))
 
     cg.add(var.set_poll_interval_ms(config[CONF_POLL_INTERVAL].total_milliseconds))
 

@@ -103,7 +103,7 @@ cc1101:
   sync1: 0xD3
   sync0: 0x91
   num_preamble: 4
-  rx_attenuation: 6dB
+  rx_attenuation: 12dB
 
 spi:
   id: duco_spi
