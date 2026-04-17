@@ -135,12 +135,10 @@ class DucoRF : public Component, public cc1101::CC1101Listener {
    *  mode: 0=AUTO, 4=LOW, 5=MIDDLE, 6=HIGH, 7=NOTHOME
    *  permanent: true = stays until changed, false = timed override
    *  percentage: sensor demand percentage (0 = not used)
-   *  button_presses: number of button presses to encode (1-3)
    */
-  void request_ventilation_mode(uint8_t mode, bool permanent = false, uint8_t percentage = 0,
-                                 uint8_t button_presses = 1) {
+  void request_ventilation_mode(uint8_t mode, bool permanent = false, uint8_t percentage = 0) {
     ESP_LOGI(TAG, "Requesting mode=%s, permanent=%s, percentage=%s", mode_to_string_(map_vent_mode_(mode, permanent)), permanent ? "yes" : "no", percentage_to_string_(percentage));
-    rf_.requestVentilationMode(mode, permanent, percentage, button_presses);
+    rf_.requestVentilationMode(mode, permanent, percentage);
     // // Immediate local feedback; RF confirmations can still update this later.
     // publish_vent_mode_from_raw_(mode, permanent);
     flush_rf_log_();

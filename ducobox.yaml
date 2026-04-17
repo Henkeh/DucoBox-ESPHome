@@ -43,7 +43,7 @@ esphome:
         # Get the ventilation box and this controller into sync by forcing "auto" mode right after startup, which should be a safe default that is accepted by the ventilation box regardless of its current state
         - delay: 2s
         - lambda: |-
-            id(duco_rf_gw).request_ventilation_mode(0, false, 0, 1);
+            id(duco_rf_gw).request_ventilation_mode(0, false, 0);
 
 # ── Serial gateway (read) ───────────────────────────────────────────────────
 logger:
@@ -284,7 +284,7 @@ number:
     set_action:
       - lambda: |-
           // Note that percentage set is only honored by the ventilation when it is set higher than the current determined demand in auto mode.
-          id(duco_rf_gw).request_ventilation_mode(0, false, x, 1);
+          id(duco_rf_gw).request_ventilation_mode(0, false, x);
 
 switch:
   - platform: template
@@ -318,7 +318,7 @@ switch:
             }
           }
 
-          id(duco_rf_gw).request_ventilation_mode(mode, true, 0, 1);
+          id(duco_rf_gw).request_ventilation_mode(mode, true, 0);
     turn_off_action:
       - lambda: |-
           if (id(fan_sync_in_progress)) {
@@ -344,7 +344,7 @@ switch:
             }
           }
 
-          id(duco_rf_gw).request_ventilation_mode(mode, false, 0, 1);
+          id(duco_rf_gw).request_ventilation_mode(mode, false, 0);
 
 fan:
   - platform: template
@@ -361,14 +361,14 @@ fan:
             return;
           }
           const bool permanent = id(ventilation_permanent_switch).state;
-          id(duco_rf_gw).request_ventilation_mode(4, permanent, 0, 1);
+          id(duco_rf_gw).request_ventilation_mode(4, permanent, 0);
     on_turn_off:
       - lambda: |-
           if (id(fan_sync_in_progress)) {
             return;
           }
           const bool permanent = id(ventilation_permanent_switch).state;
-          id(duco_rf_gw).request_ventilation_mode(7, permanent, 0, 1);
+          id(duco_rf_gw).request_ventilation_mode(7, permanent, 0);
     on_speed_set:
       - lambda: |-
           if (id(fan_sync_in_progress)) {
@@ -381,7 +381,7 @@ fan:
           } else if (id(duco_ventilation_fan).speed >= 3) {
             mode = 6;
           }
-          id(duco_rf_gw).request_ventilation_mode(mode, permanent, 0, 1);
+          id(duco_rf_gw).request_ventilation_mode(mode, permanent, 0);
     on_preset_set:
       - lambda: |-
           if (id(fan_sync_in_progress)) {
@@ -401,7 +401,7 @@ fan:
           if (preset == "Away") {
             mode = 7;
           }
-          id(duco_rf_gw).request_ventilation_mode(mode, permanent, 0, 1);
+          id(duco_rf_gw).request_ventilation_mode(mode, permanent, 0);
 
 button:
   - platform: template

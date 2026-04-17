@@ -834,7 +834,7 @@ void DucoCC1101::parseMessageCommand(uint8_t inboxQMessageNumber)
 				case 0x12: // 0x12 = bevestiging wijziging ventilatiemodus
 					setLogMessage("Received change ventilation command");
 					if(processNewVentilationMode(inboxQMessageNumber, commandNumber, startByteNextCommand)){ // if ventilationmode is changed,
-						prepareVentilationModeMessage(outboxQMessageNumber, commandNumber, this->permanentVentilationMode, false, this->currentVentilationMode, 0, this->temperature, false, false, 0);
+						prepareVentilationModeMessage(outboxQMessageNumber, commandNumber, this->permanentVentilationMode, false, this->currentVentilationMode, 0, this->temperature, false, false);
 						commandWaitForAck = true;
 						setLogMessage("Send sendConfirmationNewVentilationMode");
 					}else{
