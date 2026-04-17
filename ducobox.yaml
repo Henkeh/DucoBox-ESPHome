@@ -54,7 +54,7 @@ logger:
 duco_gateway:
   id: duco_gateway_gw
   uart_id: ducobox_uart
-  poll_interval: 5s
+  poll_interval: 15s
   ext_sensor_node: 2    # UCCO2 node (CO2 + temp), node ID can be found by pressing the "Log All Duco Nodes" button in the UI and looking for the node marked as "UCCO2"
   rh_sensor_node: 4     # UCRH node (humidity)
   ##vent_mode_sensor:       sensor_vent_mode
