@@ -1,6 +1,8 @@
 # Include components
 external_components:
-  - source: github://Henkeh/DucoBox-ESPHome@main
+  - source:
+      type: local
+      path: components
     components: [duco_gateway, duco_rf]
 
 # Enable Home Assistant API
@@ -23,16 +25,9 @@ web_server:
   port: 80
   version: '3'
 
-# Configure ESP32 specific settings
-esp32:
-  board: esp32-s3-devkitc-1   # Change to your board if different and update pin numbers accordingly
-  cpu_frequency: 240MHz
-  variant: esp32s3
-  framework:
-    type: esp-idf
-    advanced:
-      assertion_level: DISABLE
-      compiler_optimization: PERF
+# Configure ESP8266 specific settings
+esp8266:
+  board: d1_mini              # Change to your board if different and update pin numbers accordingly
 
 esphome:
   min_version: 2025.12.0
@@ -71,8 +66,8 @@ duco_gateway:
 
 uart:
   id: ducobox_uart
-  tx_pin: GPIO43          # Change to the correct TX pin for your board
-  rx_pin: GPIO44          # Change to the correct RX pin for your board
+  tx_pin: GPIO1           # Change to the correct TX pin for your board
+  rx_pin: GPIO3           # Change to the correct RX pin for your board
   baud_rate: 115200
 
 # ── RF gateway (write) ────────────────────────────────────────────────────
@@ -86,8 +81,8 @@ duco_rf:
 cc1101:
   id: duco_cc1101
   spi_id: duco_spi
-  cs_pin: GPIO07          # Change to the correct CS pin for your board
-  gdo0_pin: GPIO06        # Change to the correct GDO0 pin for your board (used for packet reception indication)
+  cs_pin: GPIO15          # Change to the correct CS pin for your board
+  gdo0_pin: GPIO02        # Change to the correct GDO0 pin for your board (used for packet reception indication)
   packet_mode: true
   packet_length: 0
   crc_enable: true
@@ -104,13 +99,12 @@ cc1101:
   sync1: 0xD3
   sync0: 0x91
   num_preamble: 4
-  rx_attenuation: 12dB
 
 spi:
   id: duco_spi
-  clk_pin: GPIO02       # Change to the correct CLK pin for your board
-  miso_pin: GPIO04      # Change to the correct MISO pin for your board
-  mosi_pin: GPIO01      # Change to the correct MOSI pin for your board
+  clk_pin: GPIO14       # Change to the correct CLK pin for your board
+  miso_pin: GPIO12      # Change to the correct MISO pin for your board
+  mosi_pin: GPIO13      # Change to the correct MOSI pin for your board
 
 # All outputs
 sensor:

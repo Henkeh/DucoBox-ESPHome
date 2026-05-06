@@ -1,6 +1,18 @@
 # DucoBox-ESPHome
 DucoBox ESPHome component based on the work of [arnemauer/Ducobox-ESPEasy-Plugin](https://github.com/arnemauer/Ducobox-ESPEasy-Plugin/). It uses native ESPHome components where possible, e.g. UART, SPI, CC1101. It was tested with a DucoBox Silent. It should work with other DucoBoxes that were supported by the ESPEasy plugin.
 
+## Example configurations
+- `ducobox.yaml`: full gateway + RF example for ESP32(-S3).
+- `ducobox-simple.yaml`: simplified full gateway + RF example for ESP32(-S3).
+- `ducobox-esp8266.yaml`: full gateway + RF example for ESP8266 (`d1_mini` as default).
+- `ducobox-simple-esp8266.yaml`: simplified full gateway + RF example for ESP8266 (`d1_mini` as default).
+- `ducobox-rf.yaml`: RF-only example for ESP32(-S3).
+- `ducobox-rf-simple.yaml`: simplified RF-only example for ESP32(-S3).
+- `ducobox-rf-esp8266.yaml`: RF-only example for ESP8266 (`d1_mini` as default).
+- `ducobox-rf-simple-esp8266.yaml`: simplified RF-only example for ESP8266 (`d1_mini` as default).
+- `ducobox-gateway.yaml`: serial gateway-only example for ESP32(-S3) (read-only ventilation telemetry).
+- `ducobox-diag.yaml`: diagnostic variant of `ducobox.yaml` with extra logging and a custom command text entity for troubleshooting.
+
 # Usage
 In order to use the component perform the following steps:
 1. Flash one of the example ESPHome configurations onto your device.

@@ -1,7 +1,9 @@
 # Include components
 external_components:
-  - source: github://Henkeh/DucoBox-ESPHome@main
-    components: [duco_gateway, duco_rf]
+  - source:
+      type: local
+      path: components
+    components: [duco_rf]
 
 # Enable Home Assistant API
 api:
@@ -15,7 +17,7 @@ ota:
 wifi:
   ssid: "DummySSID"           # Change to your WiFi SSID
   password: "DummyPassword"   # Change to your WiFi password
-  use_address: 1.2.3.4        # Change to the desired static IP address for this device (if not using DHCP)
+  use_address: 1.2.3.4         # Change to the desired static IP address for this device (if not using DHCP)
   min_auth_mode: WPA2
 
 # Enable web server
@@ -23,21 +25,14 @@ web_server:
   port: 80
   version: '3'
 
-# Configure ESP32 specific settings
-esp32:
-  board: esp32-s3-devkitc-1   # Change to your board if different and update pin numbers accordingly
-  cpu_frequency: 240MHz
-  variant: esp32s3
-  framework:
-    type: esp-idf
-    advanced:
-      assertion_level: DISABLE
-      compiler_optimization: PERF
+# Configure ESP8266 specific settings
+esp8266:
+  board: d1_mini              # Change to your board if different and update pin numbers accordingly
 
 esphome:
   min_version: 2025.12.0
-  name: ducobox
-  friendly_name: DucoBox
+  name: ducobox-rf
+  friendly_name: DucoBox RF
   on_boot:
     - priority: -10
       then:
@@ -46,36 +41,11 @@ esphome:
         - lambda: |-
             id(duco_rf_gw).request_ventilation_mode(0, false, 0);
 
-# ── Serial gateway (read) ───────────────────────────────────────────────────
+# ── RF gateway (write) ────────────────────────────────────────────────────
 logger:
   baud_rate: 0
   level: INFO
 
-# Uncomment sensor definitions below as needed; these are used by the duco_gateway component to populate the data read from the ventilation box, and can also be used for debugging or other purposes as desired
-duco_gateway:
-  id: duco_gateway_gw
-  uart_id: ducobox_uart
-  poll_interval: 15s
-  ext_sensor_node: 2    # UCCO2 node (CO2 + temp), node ID can be found by pressing the "Log All Duco Nodes" button in the UI and looking for the node marked as "UCCO2"
-  rh_sensor_node: 4     # UCRH node (humidity)
-  ##vent_mode_sensor:       sensor_vent_mode
-  vent_percentage_sensor: fan_speed_pct
-  fan_speed_sensor:       fan_speed
-  countdown_sensor:       countdown_sensor
-  box_temperature_sensor: box_temperature
-  box_humidity_sensor:    box_humidity
-  ext_co2_sensor:         livingroom_co2
-  ext_temperature_sensor: livingroom_temperature
-  ext_humidity_sensor:    bathroom_humidity
-  vent_mode_text_sensor:  ventilation_mode_text
-
-uart:
-  id: ducobox_uart
-  tx_pin: GPIO43          # Change to the correct TX pin for your board
-  rx_pin: GPIO44          # Change to the correct RX pin for your board
-  baud_rate: 115200
-
-# ── RF gateway (write) ────────────────────────────────────────────────────
 duco_rf:
   id: duco_rf_gw
   cc1101_id: duco_cc1101
@@ -86,8 +56,8 @@ duco_rf:
 cc1101:
   id: duco_cc1101
   spi_id: duco_spi
-  cs_pin: GPIO07          # Change to the correct CS pin for your board
-  gdo0_pin: GPIO06        # Change to the correct GDO0 pin for your board (used for packet reception indication)
+  cs_pin: GPIO15          # Change to the correct CS pin for your board
+  gdo0_pin: GPIO02        # Change to the correct GDO0 pin for your board (used for packet reception indication)
   packet_mode: true
   packet_length: 0
   crc_enable: true
@@ -104,86 +74,17 @@ cc1101:
   sync1: 0xD3
   sync0: 0x91
   num_preamble: 4
-  rx_attenuation: 12dB
 
 spi:
   id: duco_spi
-  clk_pin: GPIO02       # Change to the correct CLK pin for your board
-  miso_pin: GPIO04      # Change to the correct MISO pin for your board
-  mosi_pin: GPIO01      # Change to the correct MOSI pin for your board
-
-# All outputs
-sensor:
-  - platform: template
-    id: fan_speed_pct
-    name: "Fan Speed (%)"
-    unit_of_measurement: "%"
-    icon: "mdi:fan"
-    accuracy_decimals: 0
-    state_class: measurement
-
-  - platform: template
-    id: fan_speed
-    name: "Fan Speed"
-    unit_of_measurement: "rpm"
-    icon: "mdi:fan"
-    accuracy_decimals: 0
-    state_class: measurement
-
-  - platform: template
-    id: countdown_sensor
-    name: "Countdown"
-    icon: "mdi:fan-clock"
-    unit_of_measurement: "s"
-    accuracy_decimals: 0
-    state_class: measurement
-
-  - platform: template
-    id: box_temperature
-    name: "Box Temperature"
-    unit_of_measurement: "°C"
-    accuracy_decimals: 1
-    device_class: temperature
-    state_class: measurement
-
-  - platform: template
-    id: box_humidity
-    name: "Box Humidity"
-    unit_of_measurement: "%"
-    accuracy_decimals: 0
-    device_class: humidity
-    state_class: measurement
-
-  - platform: template
-    id: livingroom_co2
-    name: "Livingroom CO2"
-    unit_of_measurement: "ppm"
-    accuracy_decimals: 0
-    icon: "mdi:molecule-co2"
-    device_class: carbon_dioxide
-    state_class: measurement
-
-  - platform: template
-    id: livingroom_temperature
-    name: "Livingroom Temperature"
-    unit_of_measurement: "°C"
-    accuracy_decimals: 1
-    icon: "mdi:thermometer"
-    device_class: temperature
-    state_class: measurement
-
-  - platform: template
-    id: bathroom_humidity
-    name: "Bathroom Humidity"
-    unit_of_measurement: "%"
-    accuracy_decimals: 0
-    device_class: humidity
-    state_class: measurement
+  clk_pin: GPIO14       # Change to the correct CLK pin for your board
+  miso_pin: GPIO12      # Change to the correct MISO pin for your board
+  mosi_pin: GPIO13      # Change to the correct MOSI pin for your board
 
 text_sensor:
   - platform: template
-    id: ventilation_mode_text
-    name: "Ventilation mode text"
+    id: ventilation_mode_rf_text
+    name: "Ventilation mode RF text"
     icon: "mdi:fan"
     on_value:
       - lambda: |-
@@ -222,11 +123,6 @@ text_sensor:
           call.perform();
 
           id(fan_sync_in_progress) = false;
-
-  - platform: template
-    id: ventilation_mode_rf_text
-    name: "Ventilation mode RF text"
-    icon: "mdi:fan"
 
   - platform: template
     id: network_id_text
@@ -336,13 +232,6 @@ fan:
           id(duco_rf_gw).request_ventilation_mode(mode, permanent, 0);
 
 button:
-  - platform: template
-    name: "Log All Duco Nodes"
-    icon: "mdi:format-list-bulleted"
-    entity_category: config
-    on_press:
-      - lambda: 'id(duco_gateway_gw).log_all_nodes();'
-
   - platform: template
     name: "Pair"
     icon: "mdi:link-variant"

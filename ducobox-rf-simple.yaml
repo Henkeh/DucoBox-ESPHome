@@ -35,6 +35,7 @@ esp32:
       compiler_optimization: PERF
 
 esphome:
+  min_version: 2025.12.0
   name: ducobox-rf
   friendly_name: DucoBox RF
   on_boot:

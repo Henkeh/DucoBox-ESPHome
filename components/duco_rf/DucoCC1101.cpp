@@ -8,9 +8,6 @@
 #include <string.h>
 #include "esphome/core/hal.h"
 
-using esphome::delay;
-using esphome::millis;
-
 // default constructor
 DucoCC1101::DucoCC1101(uint8_t counter, uint8_t sendTries)
 {
@@ -64,7 +61,7 @@ bool DucoCC1101::ingest_packet(const std::vector<uint8_t> &payload, int rssi_dbm
 		return false;
 	}
 
-	inboxQ[messageNumber].timeReceivedMessage = millis();
+	inboxQ[messageNumber].timeReceivedMessage = esphome::millis();
 	inboxQ[messageNumber].messageProcessed = false;
 	inboxQ[messageNumber].packet.messageType = inMessage.data[0];
 
@@ -88,8 +85,6 @@ bool DucoCC1101::ingest_packet(const std::vector<uint8_t> &payload, int rssi_dbm
 
 void DucoCC1101::setLogMessage(const char *newLogMessage){
 	if(this->numberOfLogmessages < (NUMBER_OF_LOG_STRING) ){
-		//unsigned long int temp_millis = millis();
-		//snprintf(logMessages[this->numberOfLogmessages], sizeof(logMessages[this->numberOfLogmessages]), "%lu %s", temp_millis, newLogMessage);
 		snprintf(logMessages[this->numberOfLogmessages], sizeof(logMessages[this->numberOfLogmessages]), "%u - %s", this->numberOfLogmessages, newLogMessage);
 		this->numberOfLogmessages++;
 	}else{
@@ -103,7 +98,6 @@ uint8_t DucoCC1101::getNumberOfLogMessages(){
 	this->numberOfLogmessages = 0;
 	return tempNumber;
 }
-
 
 void DucoCC1101::sendDataToDuco(CC1101Packet *packet, uint8_t outboxQMessageNumber){
 	// DEBUG
@@ -709,7 +703,7 @@ void DucoCC1101::sendJoin4FinishPacket(uint8_t inboxQMessageNumber){
 
 void DucoCC1101::waitForAck(uint8_t outboxQMessageNumber){
 	setLogMessage("Start waiting for ack...");
-	outboxQ[outboxQMessageNumber].ackTimer = millis();
+	outboxQ[outboxQMessageNumber].ackTimer = esphome::millis();
 	outboxQ[outboxQMessageNumber].sendRetries = 0;
 	outboxQ[outboxQMessageNumber].ackReceived = false;
 }
@@ -725,7 +719,7 @@ void DucoCC1101::checkForAck(){
 				//setLogMessage(bigLogBuf);
 
 
-				unsigned long mill = millis();
+				unsigned long mill = esphome::millis();
  				if (mill - outboxQ[outboxQMessageNumber].ackTimer >= 300){ // wait for 300 ms (standard duco),
 				 	setLogMessage("CheckforAck: check if 300ms passed and ACK not received...");
 
@@ -737,7 +731,7 @@ void DucoCC1101::checkForAck(){
 						sendDataToDuco(&outMessage,outboxQMessageNumber);
 						//setLogMessage("CheckforAck: message resent");
 
-						outboxQ[outboxQMessageNumber].ackTimer = millis();
+						outboxQ[outboxQMessageNumber].ackTimer = esphome::millis();
 						outboxQ[outboxQMessageNumber].sendRetries = ++tempSendRetries; // restore original sendRetries
 			 		}else{
 						outboxQ[outboxQMessageNumber].waitForAck = false;

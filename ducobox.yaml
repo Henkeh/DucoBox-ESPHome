@@ -35,6 +35,7 @@ esp32:
       compiler_optimization: PERF
 
 esphome:
+  min_version: 2025.12.0
   name: ducobox
   friendly_name: DucoBox
   on_boot:
