@@ -2,16 +2,45 @@
 DucoBox ESPHome component based on the work of [arnemauer/Ducobox-ESPEasy-Plugin](https://github.com/arnemauer/Ducobox-ESPEasy-Plugin/). It uses native ESPHome components where possible, e.g. UART, SPI, CC1101. It was tested with a DucoBox Silent. It should work with other DucoBoxes that were supported by the ESPEasy plugin.
 
 ## Example configurations
-- `ducobox.yaml`: full gateway + RF example for ESP32(-S3).
-- `ducobox-simple.yaml`: simplified full gateway + RF example for ESP32(-S3).
-- `ducobox-esp8266.yaml`: full gateway + RF example for ESP8266 (`d1_mini` as default).
-- `ducobox-simple-esp8266.yaml`: simplified full gateway + RF example for ESP8266 (`d1_mini` as default).
-- `ducobox-rf.yaml`: RF-only example for ESP32(-S3).
-- `ducobox-rf-simple.yaml`: simplified RF-only example for ESP32(-S3).
-- `ducobox-rf-esp8266.yaml`: RF-only example for ESP8266 (`d1_mini` as default).
-- `ducobox-rf-simple-esp8266.yaml`: simplified RF-only example for ESP8266 (`d1_mini` as default).
+- `ducobox.yaml`: full gateway + RF example (ESP32 active, ESP8266 alternative commented in-file).
+- `ducobox-simple.yaml`: simplified full gateway + RF example (ESP32 active, ESP8266 alternative commented in-file).
+- `ducobox-rf.yaml`: RF-only example (ESP32 active, ESP8266 alternative commented in-file).
+- `ducobox-rf-simple.yaml`: simplified RF-only example (ESP32 active, ESP8266 alternative commented in-file).
 - `ducobox-gateway.yaml`: serial gateway-only example for ESP32(-S3) (read-only ventilation telemetry).
 - `ducobox-diag.yaml`: diagnostic variant of `ducobox.yaml` with extra logging and a custom command text entity for troubleshooting.
+
+## Board selection
+The examples use ESP32 by default and include commented ESP8266 alternatives in the same file.
+
+To switch one of the combined examples from ESP32 to ESP8266:
+1. Comment the `esp32:` block and uncomment the `esp8266:` block.
+2. Update the pin values in the `substitutions:` block at the top of the file.
+
+## Pin configuration via substitutions
+Pinning is configured through substitutions near the top of each example so hardware changes are made in one place.
+
+Typical substitutions look like this:
+
+```yaml
+substitutions:
+    uart_tx_pin: GPIO43
+    uart_rx_pin: GPIO44
+    cc1101_cs_pin: GPIO07
+    cc1101_gdo0_pin: GPIO06
+    spi_clk_pin: GPIO02
+    spi_miso_pin: GPIO04
+    spi_mosi_pin: GPIO01
+    # ESP8266 alternative pins:
+    # uart_tx_pin: GPIO1
+    # uart_rx_pin: GPIO3
+    # cc1101_cs_pin: GPIO15
+    # cc1101_gdo0_pin: GPIO02
+    # spi_clk_pin: GPIO14
+    # spi_miso_pin: GPIO12
+    # spi_mosi_pin: GPIO13
+```
+
+The gateway-only example only uses the UART substitutions. The RF-only examples only use the CC1101 and SPI substitutions.
 
 # Usage
 In order to use the component perform the following steps:

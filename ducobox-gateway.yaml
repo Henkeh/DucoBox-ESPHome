@@ -3,6 +3,13 @@ external_components:
   - source: github://Henkeh/DucoBox-ESPHome@main
     components: [duco_gateway]
 
+substitutions:
+  uart_tx_pin: GPIO43
+  uart_rx_pin: GPIO44
+  # ESP8266 alternative pins:
+  # uart_tx_pin: GPIO1
+  # uart_rx_pin: GPIO3
+
 # Enable Home Assistant API
 api:
 
@@ -34,6 +41,10 @@ esp32:
       assertion_level: DISABLE
       compiler_optimization: PERF
 
+# ESP8266 alternative (comment the esp32: block above and uncomment below):
+# esp8266:
+#   board: d1_mini
+
 esphome:
   min_version: 2025.12.0
   name: ducobox-gateway
@@ -64,8 +75,8 @@ duco_gateway:
 
 uart:
   id: ducobox_uart
-  tx_pin: GPIO43          # Change to the correct TX pin for your board
-  rx_pin: GPIO44          # Change to the correct RX pin for your board
+  tx_pin: ${uart_tx_pin}
+  rx_pin: ${uart_rx_pin}
   baud_rate: 115200
 
 sensor:
